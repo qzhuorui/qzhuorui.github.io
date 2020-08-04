@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 'qzhuorui'
+title: 'Synchronized，ReentrantLock'
 date: 2020-07-25
 author: qzhuorui
 color: rgb(255,210,32)
