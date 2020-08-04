@@ -20,7 +20,7 @@ webtitle: 'qzhuorui Blog'
 bio: 'Each day I examine myself in three approaches'
 about: true
 aboutyou: 'an Android Developer'
-portraits: '/assets/profile.jpeg' # your portraits image file path
+portraits: '/assets/profile.jpg' # your portraits image file path
 
 # SNS
 SNS: true
@@ -46,7 +46,7 @@ paginatepath: ['page:num']
 
 # since
 footer:
-  since: 2018
+  since: 2015
 
 # Markdown
 markdown: kramdown
