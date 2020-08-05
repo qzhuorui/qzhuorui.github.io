@@ -15,7 +15,7 @@ tags: JVM/ART
 
 Dalvik是Google公司自己设计用于Android平台的Java虚拟机，Android工程师编写的Java或者Kotlin代码最终都是在这台虚拟机中被执行的。在**Android5.0之前叫作DVM，5.0之后改为ART** （Android RunTime）
 
-在整个Android操作系统体系中，ART位于以下图中红框位置。![CgqCHl6qeUKAa86MAAY44MY5alU343](/assets/profile.jpg/CgqCHl6qeUKAa86MAAY44MY5alU343.png)
+在整个Android操作系统体系中，ART位于以下图中红框位置。![CgqCHl6qeUKAa86MAAY44MY5alU343](/screenshot/dvm.png)
 
 > 其实称DVM/ART为Android版的Java虚拟机，这种说法并不是很准确。虚拟机必须符合Java虚拟机规范，也就是要通过JCM（Java Compliance Kit）的测试并获得授权，但是DVM/ART并没有。
 
@@ -57,7 +57,7 @@ DVM与JVM另一个比较显著的不同就是内存结构的区别，主要体�
 
 Dalvik虚拟机中的堆被划分为了2部分：Active Heap，Zygote Heap。
 
-![CgqCHl6qe9WAY-x4AAHlcF3z4X8795](G:\GitRepository\qzhuorui.github.io\screenshot\CgqCHl6qe9WAY-x4AAHlcF3z4X8795.png)
+![CgqCHl6qe9WAY-x4AAHlcF3z4X8795](/screenshot/dalvikheap.png)
 
 
 
@@ -67,7 +67,7 @@ Android系统的第一个Dalvik虚拟机是由Zygote进程创建的，而应用�
 
 Zygote进程是在系统启动时产生的，它会完成虚拟机的初始化，库的加载，预置类库的加载和初始化等操作，而在系统需要一个新的虚拟机实例时Zygote通过复制自身，最快速的提供一个进程；另外对于一些只读的系统库，所有虚拟机实例都和Zygote共享一块内存区域，大大节省了内存开销，如下图：
 
-![CgqCHl6qe-aATBEFAAEFkKPCQb4077](G:\GitRepository\qzhuorui.github.io\screenshot\CgqCHl6qe-aATBEFAAEFkKPCQb4077.png)
+![CgqCHl6qe-aATBEFAAEFkKPCQb4077](/screenshot/zygoteeg.png)
 
 当启动一个应用时，Android操作系统需要为应用程序创建新的进程，而这一步操作是通过一种写时拷贝技术（COW）直接复制Zygote进程而来。这意味着在开始的时候，程序进程和Zygote进程共享了同一个用来分配对象的堆。然而， **当Zygote进程或者应用程序进程对该堆进行写操作时，内核就会执行真正的拷贝操作，使得Zygote进程和应用进程分别拥有自己的一份拷贝** 。拷贝是一件费时费力的事情。 **因此，为了尽量避免拷贝，Dalvik虚拟机将自己的堆划为两部分** 。
 
