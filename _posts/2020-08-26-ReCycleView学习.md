@@ -122,6 +122,83 @@ RecycleView之所以分成这么多块，是为了在功能上进行一些区分
 
 #### b.第二级缓存mCachedViews
 
+它用来缓存移除屏幕之外的ViewHolder，默认情况下缓存个数是2，不过可以通过setViewCacheSize方法来改变缓存的容量大小。如果mCachedViews的容量已满，则会根据FIFO的规则将旧ViewHolder抛弃，然后添加新的ViewHolder，如下：
+
+![12](/screenshot/RecycleView学习/12.gif)
+
+通常情况下刚被移出屏幕的ViewHolder有可能接下来马上就会使用到，所以ViewHolder不会立即将其设置为无效ViewHolder，而是会将它们保存到cache中，但又不能将所有移除屏幕的ViewHolder都视为有效ViewHolder，所以它的默认容量只有2个
+
+#### c.第三级缓存ViewCacheExtension
+
+这是ViewHolder预留给开发人员的一个抽象类，在这个类中只有一个抽象方法，如下：
+
+![13](/screenshot/RecycleView学习/13.png)
+
+开发人员可以通过继承ViewCacheExtension，并复写抽象方法getViewForPositionAndType来实现自己的缓存机制。只是一般情况下我们不会自己实现也不建议自己去添加缓存逻辑，因为这个类的使用门槛较高。
+
+#### d.第四级缓存RecycledViewPool
+
+RecycledViewPool同样是用来缓存屏幕外的ViewHolder，当mCachedViews中的个数已满（默认为2），则从mCachedViews中淘汰出来的ViewHolder会先缓存到RecycledViewPool中。ViewHolder在被缓存到RecycledViewPool时，会将内部的数据清理，因此从RecycledViewPool中取出来的ViewHolder需要重新调用onBindViewHolder绑定数据。这就同最早的ListView中的使用ViewHolder复用convertView的道理是一致的，因此ViewHolder也算是将ListView优点完美继承了。
+
+RecycledViewPool还有一个重要功能，多个RV之间可以共享一个RecycledViewPool，这对于多tab界面的优化效果会很显著。
+
+**主要注意** ：RecycledViewPool是根据type来获取ViewHolder，每个type默认最大缓存5个。
+
+因此多个RV共享RecycledViewPool时，必须确保共享的RV使用的Adapter是同一个，或view type是不会冲突的。
+
+## 三、RV是如何从缓存中获取ViewHolder的
+
+在上面介绍onLayout阶段时，有提到layoutChunk方法中通过调用layoutState.next方法拿到某个子ItemView，然后添加到RV中。
+
+看下layoutState.next代码：
+
+![14](/screenshot/RecycleView学习/14.png)
+
+继续跟下去：
+
+![15](/screenshot/RecycleView学习/15.png)
+
+可以看出最终调用tryGetViewHolderForPositionByDeadline方法来查找相应位置上的ViewHolder，在这个方法中会从上面的4级缓存中依次查找：
+
+![16](/screenshot/RecycleView学习/16.png)
+
+如图红框处所示，如果在各级缓存中都没有找到相应的ViewHolder，则会使用Adapter中的createViewHolder方法创建一个新的ViewHolder
+
+## 四、何时将ViewHolder存入缓存
+
+看下ViewHolder被存入各级缓存的场景
+
+### 1.第一次layout
+
+当调用setLayoutManager和setAdapter之后，RV会经历第一次layout并被显示到屏幕上，如下：
+
+![17](/screenshot/RecycleView学习/17.png)
+
+此时并不会有任何ViewHolder的缓存，所有的ViewHolder都是通过createViewHolder创建的
+
+### 2.刷新列表
+
+如果通过手势下拉刷新，获取到新的数据data之后，我们会调用notifyXXX方法通知RV数据发生改变，这回RV会先将屏幕内的所有ViewHolder保存在Scrap中，如下：
+
+![18](/screenshot/RecycleView学习/18.png)
+
+当缓存执行完之后，后续通过Recycler就可以从缓存中获取相应position的ViewHolder（姑且称为旧ViewHolder），然后将刷新后的数据设置到这些ViewHolder上，如下：
+
+![19](/screenshot/RecycleView学习/19.png)
+
+最后再将新的ViewHolder绘制到RV上：
+
+![20](/screenshot/RecycleView学习/20.png)
+
+# 总结
+
+本次我们深入学习了RecycleView源码中的2块核心实现：
+
+- RecycleView是如何经过测量，布局，最终绘制到屏幕上，其中大部分工作是通过委托给LayoutManager来实现的
+- RecycleView的缓存复用机制，主要是通过内部类Recycler来实现
+
+
+
 
 
 
