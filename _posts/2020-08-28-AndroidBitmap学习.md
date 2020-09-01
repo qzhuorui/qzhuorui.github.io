@@ -84,6 +84,92 @@ Android中的图片不仅可以保存在drawable目录中，还可以保存在as
 
 ## 三、Bitmap复用
 
+### 1.场景描述
+
+如果在Android某个页面创建很多个Bitmap，比如有两张图片A和B，通过点击某一个按钮需要在ImageView上切换显示这两张图片，实现效果如下：
+
+![6](/screenshot/AndroidBitmap学习/6.gif)
+
+代码如下：
+
+![7](/screenshot/AndroidBitmap学习/7.png)
+
+但是在每次调用switchImage切换图片时，都需要通过BitmapFactory创建一个新的Bitmap对象。当方法执行完毕之后，这个Bitmap又会被GC回收，这就造成不断地创建和销毁较大的内存对象，从而导致频繁GC（或叫内存抖动）。像Android APP这种面向用户的产品，会影响到用户体验的。可以在AS Profiler中查看内存情况，多次切换内存图片后，显示的效果如下：
+
+![8](/screenshot/AndroidBitmap学习/8.png)
+
+### 2.使用Options.inBitmap优化
+
+实际上经过第一次显示后，内存中已经存在了一个Bitmap对象。每次切换图片只是显示的内容不同，我们可以重复利用已经占用内存的Bitmap空间，具体做法就是使用Options.inBitmap参数。将getBitmap方法修改如下：
+
+![9](/screenshot/AndroidBitmap学习/9.png)
+
+解释：
+
+- 图①处创建一个可以用来服用的Bitmap对象
+- 图②处将options.inBitmap赋值为之前创建的reuseBitmap对象，从而避免重新分配内存
+
+重新运行代码，并查看Profiler中内存情况，可以发现不管我们切换多少次图片，内存占用始终处于一个水平线状态
+
+![10](/screenshot/AndroidBitmap学习/10.png)
+
+**注意**：
+
+在上述getBitmap方法中，复用inBitmap之前，需要调用canUseForInBitmap方法来判断reuseBitmap是否可以被复用。这是因为Bitmap的复用有一定的限制：
+
+- 在Android4.4版本之前，只能重用相同大小的Bitmap内存区域
+- 4.4之后可以重用任何Bitmap的内存区域，只要这块内存比将要分配内存的Bitmap大就行
+
+canUseForInBitmap代码如下：
+
+![11](/screenshot/AndroidBitmap学习/11.png)
+
+在每次加载前，除了inBitmap参数外，我们还需要将Options.inMutable置为true，如果不置为true，BitmapFactory将不会重复利用Bitmap内存，并输出相应的warning日志
+
+## 四、BitmapRegionDecoder图片分片显示
+
+有时想加载的图片很大或很长，比如手机滚动截屏的图。
+
+针对这种情况，在不压缩图片的前提下， **不建议一次性将整张图加载到内存** ，而是采用分片加载的方式来显示图片部分内容，然后根据手势操作，放大缩小或移动图片显示区域。
+
+图片分片加载显示主要使用Android SDK中的BitmapRegionDecoder来实现。
+
+### 1.BitmapRegionDecoder基本使用
+
+首先需要使用BitmapRegionDecoder将图片加载到内存中，图片可以以绝对路径，文件描述符，输入流的方式传递给BitmapRegionDecoder，如下：
+
+![12](/screenshot/AndroidBitmap学习/12.png)
+
+运行后，显示效果如下：
+
+![13](/screenshot/AndroidBitmap学习/13.png)
+
+在此基础上，我们可以通过自定义View，添加touch事件来动态地设置Bitmap需要显示的区域Rect。
+
+## 五、Bitmap缓存
+
+当需要在界面上同时展示一大堆图片时，比如ListView，RecycleView等，由于用户不断的上下滑动，某个Bitmap可能会被短时间内加载并销毁多次。这种情况下**通过适当的缓存，可以有效地减缓GC频率保证图片加载效率，提高界面响应速度和流畅性** 。
+
+最常用的缓存方式就是LruCache，基本使用如下：
+
+![14](/screenshot/AndroidBitmap学习/14.png)
+
+解释：
+
+- 图①处指定LruCache的最大空间为20M，当超过20M时，LruCache会根据内部缓存策略将多余Bitmap移除
+- 图②处指定了插入Bitmap时的大小，当我们向LruCache中插入数据时，LruCache并不知道每一个对象会占用多大内存，因此需要手动指定，并根据缓存数据的类型不同也会有不同的计算方式
+
+# 总结
+
+本次学习总结了以下几个问题：
+
+1. 一张图片被加载成Bitmap后实际占用内存是多大
+2. 通过Options.inBitmap可以实现Bitmap的复用，但有一定限制
+3. 当界面需要展示多张图，尤其是列表，可以考虑使用Bitmap缓存
+4. 如果要展示图过大，可以考虑分片加载策略
+
+
+
 
 
 
