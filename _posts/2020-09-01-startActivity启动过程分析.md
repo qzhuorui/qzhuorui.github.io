@@ -168,6 +168,66 @@ Activity 启动事务的执行是由ClientLifecycleManager来完成的，具体�
 
 ## 三、ApplicationThread -> Activity
 
+刚才已经分析了AMS将启动Activity的任务作为一个事务ClientTransaction去完成，在ClientLifecycleManager中会调用ClientTransaction的schedule()方法，如下：
+
+![17](/screenshot/startActivity启动过程分析/17.png)
+
+而mClient是一个IApplicationThread接口类型，具体实现是ActivityThread的内部类ApplicationThread。因此后续执行Activity生命周期的过程都是由ApplicationThread指导完成的，scheduleTransaction方法如下：
+
+![18](/screenshot/startActivity启动过程分析/18.png)
+
+可以看出，这里还是调用了ActivityThread的scheduleTransaction方法。但是这个方法实际上是在ActivityThread的父类ClientTransactionHandler中实现，具体如下：
+
+![19](/screenshot/startActivity启动过程分析/19.png)
+
+调用sendMessage方法，向Handler中发送了一个EXECUTE_TRANSACTION的消息，并且Message中的obj就是启动Activity的事务对象。而这个Handler的具体实现是ActivityThread中的mH对象。具体如下：
+
+![20](/screenshot/startActivity启动过程分析/20.png)
+
+最终调用了事务的execute方法，execute方法如下：
+
+![21](/screenshot/startActivity启动过程分析/21.png)
+
+在executeCallbacl方法中，会遍历事务中的callback并执行execute方法，这些callbacks是何时被添加的呢？
+
+看一下上面ClientTransaction创建的代码：
+
+![22](/screenshot/startActivity启动过程分析/22.png)
+
+在创建ClientTransaction时，通过addCallback方法传入了Callback参数，从图中可以看出其实是一个LauncherActivityItem类型的对象。
+
+### 1.LauncherActivityItem的execute()
+
+![23](/screenshot/startActivity启动过程分析/23.png)
+
+终于跟到了Activity生命周期相关的方法了，图中client是ClientTransactionHandler类型，实际实现类就是ActivityThread。因此最终方法又回到了ActivityThread。
+
+### 2.ActivityThread的handleLaunchActivity
+
+这是一个比较重要的方法，Activity的生命周期方法就是在这个方法中有序执行，具体如下：
+
+![24](/screenshot/startActivity启动过程分析/24.png)
+
+解释：
+
+- 图①处初始化Activity的WindowManager，每一个Activity都会对应一个“窗口”
+- 图②处调用performLaunchActivity创建并显示Activity
+- 图③处通过反射创建目标Activity对象
+- 图④处调用attach方法建立Activity与Context之间的联系，创建PhoneWindow对象，并与Activity进行关联操作
+- 图⑤处通过Instrumentation最终调用Activity的onCreate方法
+
+至此，目标Activity已经被成功创建并执行生命周期方法
+
+# 总结
+
+主要学习了解了Activity的启动在源码中的实现流程。这一过程主要涉及3个进程间的通信过程：
+
+- 首先进程A通过Binder调用AMS的startActivity
+- 然后AMS通过一系列的计算构造目标Intent，然后在ActivityStack与ActivityStackSupervisor中处理Task和Activity的入栈操作
+- 最后AMS通过Binder机制，调用目标进程中ApplicationThread的方法来创建并执行Activity生命周期方法，实际上ApplicationThread是ActivityThread的一个内部类，它的执行最终都调用到了ActivityThread中的相应方法
+
+
+
 
 
 
