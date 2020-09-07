@@ -145,6 +145,74 @@ Paint：
 
 ### 2.硬件加速优势
 
+看下为什么硬件加速能够提高UI渲染的性能。再看ViewRootImpl的draw方法：
+
+![15](/screenshot/Android如何通过View进行渲染/15.png)
+
+图中mThreadRenderer是ThreadRenderer类型，其draw方法具体如下：
+
+![16](/screenshot/Android如何通过View进行渲染/16.png)
+
+①处就是硬件加速的特殊之处，通过updateRootDisplayList方法将View视图抽象成一个RenderNode对象，并构建View的DrawOp树
+
+②处通知RenderThread进行绘制操作，RenderThread是一个单例线程，每个进程最多只有一个硬件渲染线程，这样就不会存在多线程并发访问冲突问题
+
+updateRootDisplayList具体如下：
+
+![17](/screenshot/Android如何通过View进行渲染/17.png)
+
+Android硬件加速过程中，View视图被抽象成RenderNode节点，View中的绘制操作都会被抽象成一个个DrawOp，比如View中drawLine，构建过程中就会被抽象成一个DrawLineOp，drawBitmap操作会被抽象成DrawBitmapOp。每个子View的绘制被抽象成DrawRenderNodeOp，每个DrawOp有对应的OpenGL绘制命令。
+
+上面①处就是遍历View递归构建DrawOp，②处就是根据Canvas将所有的DrawOp进行缓存操作。所有的DrawOp对应的OpenGL命令构建完成之后，就需要使用RenderProxy向RenderThread发送消息，请求OpenGL线程进行渲染。整个渲染过程就是通过GPU并在不同线程绘制渲染图形，因此整个流程会更加顺畅
+
+## 三、Invalidate轻量刷新
+
+应该都用过invalidate来刷新View，这个方法跟requestLayout的区别在于，它不一定会触发View的measure和layout的操作，多数情况下只会执行draw操作
+
+在View的measure方法中，有如下代码：
+
+![18](/screenshot/Android如何通过View进行渲染/18.png)
+
+可以看出，如果要触发onMeasure方法，需要对View设置PFLAG_FORCE_LAYOUT标志位，而这个标志位在requestLayout方法中被设置，invalidate并没有设置此标志位
+
+再看下onLayout方法：
+
+![19](/screenshot/Android如何通过View进行渲染/19.png)
+
+可以看出，当View的位置发生改变，或添加PFLAG_FORCE_LAYOUT标志位后onLayout才会被执行。当调用invalidate方法时，如果View的位置并没有发生改变，则View不会触发重新布局的操作
+
+### 1.postInvalidate
+
+这个也是比较重要的，使用较多的方法
+
+它和invalidate的区别就是invalidate是在UI线程调用，postInvalidate是在非UI线程调用
+
+postInvalidate实现如下：
+
+![20](/screenshot/Android如何通过View进行渲染/20.png)
+
+最终还是在ViewRootImpl中进行操作
+
+### 2.ViewRootImpl的dispatchInvalidateDelayed
+
+![21](/screenshot/Android如何通过View进行渲染/21.png)
+
+在非UI线程中，通过Handler发送一个延时Message，因为Handler是在主线程中创建的，所以最终handlerMessage会在主线程中被执行，方法如下：
+
+![22](/screenshot/Android如何通过View进行渲染/22.png)
+
+上图中的msg.obj就是发送postInvalidate的View对象，可以看出最红还是回到UI线程执行了View的invalidate方法。
+
+都知道只有UI线程才可以刷新View控件，但是事实并非如下。在ViewRootImpl中对View进行刷新时，会检查当前线程的合法性：
+
+![23](/screenshot/Android如何通过View进行渲染/23.png)
+
+图中mThread是被赋值为当前线程，而ViewRootImpl是在UI线程中被创建的，因此只有UI线程可以进行View刷新。但是如果能在非UI线程中创建ViewRootImpl，并通过这个ViewRootImpl进行View的添加和绘制操作，那么理论上也是可以在非UI线程中刷新View控件，只是维护程本较高，很少有人去做
+
+# 总结
+
+主要学习总结了ViewRootImpl是如何执行View的渲染操作的，其中核心方法在performTraversals方法中会按顺序执行measure-layout-draw操作。并介绍了软件绘制和硬件加速的区别。最后介绍了View刷新的两种方式invalidate和postInvalidate
+
 
 
 
