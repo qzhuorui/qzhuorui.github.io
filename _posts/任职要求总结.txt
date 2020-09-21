@@ -22,3 +22,24 @@
 
 12.通讯协议（包含在音视频学习路径中）
 
+------
+
+Day：
+音视频知识（Codec，OpenGL.ES，FFmpeg，JNI），音视频传输通讯协议
+Android常用框架（OKhttp，Retrofit，Glide）
+事件分发，自定义View
+网络通信，Socket，网络基础知识
+gradle语言，json解析（配合网络请求一起）
+
+Night：
+JVM相关知识
+Android基础知识
+多线程
+性能调优，内存优化
+面试问题
+
+Weekend：
+音视频Demo编写
+
+国庆节：
+集合框架，数据结构，算法，设计模式
