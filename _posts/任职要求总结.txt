@@ -26,10 +26,10 @@
 
 Day：
 音视频知识（Codec，OpenGL.ES，FFmpeg，JNI），音视频传输通讯协议
-Android常用框架（OKhttp，Retrofit，Glide）
+Android常用框架（Retrofit(json解析)，RXJava，Glide，MVP，MVVM，Dagger）
 事件分发，自定义View
 网络通信，Socket，网络基础知识
-gradle语言，json解析（配合网络请求一起）
+gradle语言
 
 Night：
 JVM相关知识
