@@ -1,0 +1,31 @@
+# 音视频计划优先级
+
+---周末---
+1. FFmpeg，OpenSL.ES，JNI，NDK 基础知识了解
+2. 数据封装协议，流媒体传输协议(TCP,UDP,RTMP,HTTP-FLV)，网络相关
+3. 直播相关知识
+4. OpenGL.ES，对应Demo复习
+5. MediaCodec硬编硬解码，对应Demo复习
+
+
+
+# 剩余计划优先级
+
+---晚上---
+1. 博客总结知识遍历复习
+	1. 线程
+	2. JVM基础
+	3. 其他
+2. Android基础知识（Android开发进阶书）
+
+
+---白天---
+3. 事件分发，自定义View，RecycleView，ListView
+4. 常用框架（RXJava，Retrofit，Glide，GreenDao）
+5. Android性能优化
+6. 数据结构，算法，设计模式
+
+
+
+---晚上---
+# 面试题————（晚上）
