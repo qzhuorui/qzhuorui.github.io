@@ -1,0 +1,86 @@
+# FFmpeg学习
+
+```
+注意：
+在引入 FFmpeg 相关库的头文件时，需要注意把 #include 放到 extern "C" {} 中。
+因为 FFmpeg 是 C 语言写的，所以在引入到 C++ 文件中的时候，需要标记以 C 的方式来编译，否则会导致编译出错
+```
+
+```
+说明：
+由于 JNIEnv 和 线程 是一一对应的，也就是说，在 Android 中，JNI环境 是和线程绑定的，每一个线程都有一个独立的 JNIEnv 环境，并且互相之间不可访问。
+所以如果要在新的线程中访问 JNIEnv，需要为这个线程创建一个新的 JNIEnv
+```
+
+## FFmpeg相关库介绍
+1. avcodec：音视频编解码核心库
+2. avformat：音视频容器格式 的封装和解析
+
+1. AVFormatContext：属于avformat库，存放码流数据的上下文，用于音视频的封装和解封
+2. AVCodecContext：属于avcodec库，存放编解码器参数上下文，用于对音视频数据进行编码和解码
+3. AVCodec：属于avcodec库，音视频编解码器，真正的编解码执行者
+
+## FFmpeg初始化
+1. 获取格式上下文：format_ctx
+2. 打开文件，并初始化：format_ctx
+3. 提取流信息到：format_ctx
+4. 查找音/视频流索引：idx
+
+5. 通过format_ctx，idx，获取音/视频 解码参数：code_par
+6. 通过code_par查找解码器：codec
+7. 获取解码器上下文：code_ctx
+8. 初始化解码器上下文参数：code_ctx
+
+9. 打开解码器codec
+
+## FFmpeg解码循环
+1. 从音视频流中，提取帧数据：avpacket
+2. 将帧数据avpacket送入解码
+3. 提取解码完成的数据：frame
+4. 释放数据流：packet
+5. frame == null ? 解码结束 ： 渲染
+
+## 解码流程封装
+1. 定义解码器解码状态（枚举类）：decode_state.h
+2. 定义解码器的基础功能（纯虚类，类似interface）：i_decoder.h
+3. 定义一个解码器基础类（用于封装解码中最基础的流程）：base_decoder extend i_decoder
+	1. 定义头文件：base_decoder.h
+		1. 先声明在cpp中需要用到的相关变量，就是上面提到的几个解码相关的结构体
+		2. 定义初始化和解码循环相关的基础方法，实现基类中规定的方法
+		3. 定义解码线程相关
+		4. 定义子类需要实现的虚函数
+	2. 实现基础解码器：base_decoder.cpp
+		1. 初始化解码线程
+		2. 封装解码流程
+			1. 将线程添加到虚拟机并获取env；为解码线程创建JNIEnv，失败则直接退出解码
+			2. 初始化解码器
+				1. 初始化上下文
+				2. 打开文件
+				3. 获取音视频流信息
+				4. 查找编解码器
+					1. 获取视频流的索引//不同轨道中，遍历
+					2. 获取解码器参数codecpar
+					3. 获取解码器
+					4. 获取解码器上下文
+				5. 打开解码器
+			3. 分配解码帧数据内存
+				1. 分配内存，创建待解码和解码数据结构；初始化AVPacket，存放解码前的数据；初始化AVFrame，存放解码后的数据
+			4. 回调子类方法，通知子类解码器初始化完毕
+			5. 进入解码循环
+				1. 音视频同步
+				2. 解码一帧数据
+					1. av_read_frame(m_format_ctx, m_packet)，从m_format_ctx中读取一帧解封好的待解码数据，存放在m_packet中
+					2. avcodec_send_packet(m_codec_ctx, m_packet)，将m_packet发送到解码器中解码，解码好的数据存放在m_codec_ctx中
+					3. avcodec_receive_frame(m_codec_ctx, m_frame)，接收一帧解码好的数据，存放在m_frame中
+					4. av_packet_unref(m_packet)，解码完一帧数据，一定要调用，释放内存！！！
+			6. 退出解码
+				1. 释放所有FFmpeg资源，关闭解码器，文件路径也要释放，删除全局引用
+			7. 解除线程和JVM关联
+
+## 视频播放
+两个重要点：
+1. 视频数据转码：视频解码出来，数据格式为YUV，而屏幕显示需要RGBA，因此解码器中，需要对数据做一层转换，使用FFmpeg的SwsContext工具，方法为sws_scale，既可以转格式也可以缩放宽高
+2. 声明渲染器：视频帧数据变为RGBA后就可以渲染到屏幕了，有两种本地窗口或者OpenGL.ES
+
+
+
