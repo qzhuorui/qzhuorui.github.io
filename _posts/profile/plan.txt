@@ -40,3 +40,5 @@
 	2. FFmpeg导入Android
 	3. 视频解码播放
 	4. FFmpeg+OpenSL.ES 音频解码播放（处理中）
+2. Android开发书，部分章节已看完
+3. 
