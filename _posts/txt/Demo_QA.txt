@@ -33,7 +33,7 @@ A：调用takePic后需要重启preview。或者不使用takePic方法，而是�
 Q：camera.takePicture卡顿
 A：拍照完成的onPictureTaken回调，是在主线程中不能耗时做处理，需要切到子线程处理生成bitmap并保存，注意回收bitmap
 
-## Q3
+## Q4
 Q：BlockingQueue（ArrayBlockingQueue，LinkedBlockingDeque），ConcurrentLinkedQueue，CopyOnWriteArraySet，offer/poll
 A：
 1. BlockingQueue阻塞队列，可以不用显示的使用wait/notify。基于ReentrantLock，常用于实现生产者消费者。
@@ -42,18 +42,14 @@ ArrayBlockingQueue：一个对象数组+一把锁；LinkedBlockingQueue：一个
 有阻塞功能，其阻塞基于锁机制实现，当有多个线程消费时，队列为空时消费线程被阻塞，有元素时再唤醒消费线程，队列元素可能时有时无，导致用户态和核心态频繁切换，消耗系统资源，更适合多线程插入，单线程取出，即多生产者单消费者
 2. ConcurrentLinkedQueue非阻塞队列，无锁的方式实现线程安全(自旋+CAS)，多写操作增加冲突几率，增加自旋次数，不适合多写入场景。更适合单线程插入，多线程取出。
 
-## Q3
+## Q5
 Q：MediaFormat.KEY_BITRATE_MODE：VBR，CBR
 A：动态码率，静态码率
 
-## Q4
-Q：camera-NV21，codec-YUV，需要转换？
-A：
-
-## Q4
+## Q6
 Q：编码视频音画不同步
 A：muxer混合时，bufferinfo中的PTS一定是编码完就设置的，不能说是在muxer阶段再设置PTS，这样就不对
 
-## Q5
+## Q7
 Q：解码视频播放速度过快
 A：帧控制，一帧解码出来后，计算sysTime和startMs距离(已播放时间)，bufferInfo大于这个值就sleep
