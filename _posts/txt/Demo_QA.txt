@@ -1,0 +1,59 @@
+# Demo1：
+流程：
+1. 构建muxer，encoder，setcallback
+2. start
+	1. startVideoModule(encoder.start)
+	2. startAudioModule(encoder.start)
+	3. startMuxerMixFile(blockQueue等数据，阻塞中...)
+	4. startCamera：开始从camera的回调中拿到数据，feedback给videoEncoder处理并编码
+		1. 判断索引，第一帧是配置信息，拿到csd信息
+		2. 通过接口回调出csd信息
+		3. csd信息回调给muxer，配置format，设置track，此时muxer才算OK，可以使用，注意保留setTrack的索引，写数据需要的
+		4. 继续编码，封装一个MuxerBean（这里注意设置PTS），保存进队列
+	5. startMic：
+		1. 创建AudioRecorder，startRecording()
+		2. 两个线程task，生产者消费者，数据回调出去到audioEncodderManager，处理pcm数据
+		3. 同视频处理，封装MuxerBean，保存进队列
+	6. 在csd数据回调中，判断轨道数是否为2（音视频），true时代表muxer的track都设置了，此时可以开始transmit了
+	7. startMuxer：tack都设置成功后，就可以mediaMuxer.start()，此时注意同步，要上锁
+	8. startTransmit：开始从音视频保存数据的队列中取数据，回调出去了，回调给Muxer
+	9. muxer存放数据，呼应第3步，muxer队列中有数据，就可以muxer了
+
+
+## Q1
+Q：使用TextureView时，Camera的onPreviewFrame无回调
+A：没有给Camera设置回调Buffer
+
+## Q2
+Q：调用Camera的takePicture后，onPreviewFrame又不回调了，在录制时体现为拍照之后拿不到流
+A：调用takePic后需要重启preview。或者不使用takePic方法，而是保存一帧数据生成Pic。
+官方解释：Preview will be stopped after the image is taken；callers must call startPreview() again if they want to re-start preview or take more pictures
+
+## Q3
+Q：camera.takePicture卡顿
+A：拍照完成的onPictureTaken回调，是在主线程中不能耗时做处理，需要切到子线程处理生成bitmap并保存，注意回收bitmap
+
+## Q3
+Q：BlockingQueue（ArrayBlockingQueue，LinkedBlockingDeque），ConcurrentLinkedQueue，CopyOnWriteArraySet，offer/poll
+A：
+1. BlockingQueue阻塞队列，可以不用显示的使用wait/notify。基于ReentrantLock，常用于实现生产者消费者。
+put/take阻塞；offer/poll不阻塞；两把锁：入队锁和出队锁，同一时刻只能有一个线程执行入队但可以有另一个线程执行出队！使用AtomicInterger表示队列中元素个数，保证线程安全
+ArrayBlockingQueue：一个对象数组+一把锁；LinkedBlockingQueue：一个单向链表+两把锁。
+有阻塞功能，其阻塞基于锁机制实现，当有多个线程消费时，队列为空时消费线程被阻塞，有元素时再唤醒消费线程，队列元素可能时有时无，导致用户态和核心态频繁切换，消耗系统资源，更适合多线程插入，单线程取出，即多生产者单消费者
+2. ConcurrentLinkedQueue非阻塞队列，无锁的方式实现线程安全(自旋+CAS)，多写操作增加冲突几率，增加自旋次数，不适合多写入场景。更适合单线程插入，多线程取出。
+
+## Q3
+Q：MediaFormat.KEY_BITRATE_MODE：VBR，CBR
+A：动态码率，静态码率
+
+## Q4
+Q：camera-NV21，codec-YUV，需要转换？
+A：
+
+## Q4
+Q：编码视频音画不同步
+A：muxer混合时，bufferinfo中的PTS一定是编码完就设置的，不能说是在muxer阶段再设置PTS，这样就不对
+
+## Q5
+Q：解码视频播放速度过快
+A：帧控制，一帧解码出来后，计算sysTime和startMs距离(已播放时间)，bufferInfo大于这个值就sleep
