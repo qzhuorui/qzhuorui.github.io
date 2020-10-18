@@ -20,7 +20,7 @@ OpenGL.ES所有的画面都是由三角形构成，构建模式也不同
 一般使用 GL_TRIANGLE_STRIP 顶点复用，绘制模式
 （世界坐标，左下角开始，逆时针）———— 对应的纹理坐标也要和顶点坐标顺序一致（纹理坐标就是Android屏幕坐标，左下角开始，逆时针）
 总结：
-1.纹理坐标与定点坐标是对应关系
+1.纹理坐标与顶点坐标是对应关系
 2.前置摄像头纹理坐标为：起始点 顺时针旋转90°
 3.后置摄像头纹理坐标为：起始点 顺时针旋转90° 再延Y轴翻转
 
@@ -53,7 +53,7 @@ private fun getVertexShader(): String {
 }
 
 private fun getFragmentShader(): String {
-    return  //配置float精度，使用了float数据一定要配置：lowp(低)/mediump(中)/highp(高)
+    return  //配置float精度，使用了float数据一定要配置：lowp(低)/mediump(中)/hight(高)
             "precision mediump float;" +
             //从Java传递进入来的纹理单元
             "uniform sampler2D uTexture;" +
@@ -223,7 +223,7 @@ FBO主要用于离屏渲染
 这样每个顶点就会关联着一个纹理坐标，用来标明该从纹理图像的哪个部分采样（采集片段颜色）！！！
 纹理的环绕方式和过滤就是为了告诉OpenGL该怎样对纹理采样！！！
 
-GLSL有一个供纹理对象使用的内建数据类型，叫做采样器（Sample），以纹理类型作为后缀，如sample2D。可以声明一个采样器把一个纹理添加到片段着色器中
+GLSL有一个供纹理对象使用的内建数据类型，叫做采样器（Sample），以纹理类型作为后缀，如sample2D。可以声明一个采样器把一个纹理添加到片段着色器中(JAVA代码中)
 texture函数来采样纹理的颜色，第一个参数是纹理采样器，第二个参数是对应的纹理坐标。
 texture函数会使用之前设置的纹理参数对相应的颜色值进行采样。这个片段着色器的输出就是纹理的纹理坐标上的颜色！！！
 

@@ -26,7 +26,7 @@
 3. 事件分发，自定义View，RecycleView，ListView
 4. 常用框架（RXJava，Retrofit，Glide，GreenDao）
 5. Android性能优化
-6. 数据结构，算法，设计模式
+6. 常用集合框架
 
 
 
@@ -39,6 +39,6 @@
 	1. clang交叉编译
 	2. FFmpeg导入Android
 	3. 视频解码播放
-	4. FFmpeg+OpenSL.ES 音频解码播放（处理中）
+	4. FFmpeg+OpenSL.ES 音频解码播放
 2. Android开发书，部分章节已看完
-3. 
+3. Demo3，Demo1，Demo2复习完

@@ -53,3 +53,29 @@ A：muxer混合时，bufferinfo中的PTS一定是编码完就设置的，不能�
 ## Q7
 Q：解码视频播放速度过快
 A：帧控制，一帧解码出来后，计算sysTime和startMs距离(已播放时间)，bufferInfo大于这个值就sleep
+
+# Demo2:
+
+## Q1
+流程：
+1. 自定义的GLSurfaceView中初始化，设置Render(自定义Render)
+2. 自定义SurfaceRender中
+	1. 生成OES纹理，传给Render管理类
+	2. 根据OES纹理生成textureView给到camera做预览的承载，并开启render(mCameraTexture.setOnFrameAvailableListener)，及通知GLSurfaceViewrequestRender
+	3. 此时OES就持有了camera预览的数据。索引，地址的感觉
+	4. 在Render对应生命周期中，调用Render管理类的一系列方法进行渲染
+3. Render管理类(RenderDrawerGroups)，管理各种渲染，流程控制
+	1. 接收到SurfaceRender传进来的OES纹理
+	2. 创建其管理的各个Render对象，用于管理控制
+	3. 
+
+Q：SurfaceTexture，GLSurfaceView，SurfaceView区别
+A：
+
+## Q2
+Q：SurfaceTexture，GLSurfaceView，SurfaceView区别
+A：
+
+## Q3
+Q：SurfaceTexture，GLSurfaceView，SurfaceView区别
+A：
