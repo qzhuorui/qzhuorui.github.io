@@ -2,15 +2,89 @@
 1. GC算法，垃圾搜集算法有哪些
 2. JVM内存模型？性能调优？
 
+# Java
+1. 内部类相比继承有什么优势？
+2. static
+3. 反射机制
+4. 四大引用，java引用类型（强 软 弱 虚）
+5. GC（GC回收时机，如何GC回收，标记了的立刻会被回收吗）
+6. jvm内存区域
+7. JVM的gc什么机制（GC roots可达性）
+8. 你怎么判断对象是gc roots对象
+9. 内部类能访问外部的变量和方法吗
+10. 多态
+11. 类加载机制，双亲委派模型
+
+12. copyonwritelist,线程安全和不安全的集合有哪些
+13. 垃圾回收机制，有什么代，用什么策略
+14. java finalize用来干啥,gc都系统做了，为什么还有finalize这个方法
+
+
 # Android基础
 1. Activity的加载模式 standard，singleTop，singleTask，singleInstance
 2. 事件处理：分发，拦截，处理
+3. 单例模式
+4. List、Set、Map，Hashmap/Hashtable/ConcurrentHashmap
+5. Activity，Fragment（fragment添加的方法，生命周期）
+6. 启动模式，启动其他APP的模式
+7. 主线程是何时初始化的ActivityThread
+8. 
+9. 
+10. okhttp执行过程，okhttp拦截器两种添加方法的不同
+11. 对称加密和非对称加密的过程
+12. mvc和MVVM
+13. MD5是对称还是非对称加密；对称：使用相同密钥，需要在网络传输，安全性不高；非对称：使用一对密钥，公钥和私钥，私钥不在网络传输，因此安全性高
+14. ContentProvider，怎么实现数据安全
+15. 单例和静态变量，静态方法的区别
+16. hashset怎么添加元素hashcode equals
+17. Fragment比Activity的优点
+18. 解析Json,除了Json还有哪些数据传输格式,Json解析的时候是怎么将json解析为对应的类
+19. 比较两个对象怎么比较，equals，== ；==和equals区别，重写equals怎么写,hashcode作用
+20. GET和POST区别说一下
+21. 字节流和字符流说一下
+22. HashMap的hash值和Object的hashcode()什么关系
+23. 重载和重写区别
+24. 热更新原理
+25. APK文件里面都有些什么
+26. 为什么是DEX文件
+27. Android程序运行时使用的是普通的JVM吗(优化点)
+28. 图片加载库相关，bitmap如何处理大图，如一张30M的大图，如何预防OOM
+29. listview图片加载错乱的原理和解决方案，listview是如何做缓存的？
+30. Android系统为什么会设计ContentProvider，进程共享和线程安全问题
+	1. 提供一种跨进程数据共享的方式：
+	由系统来管理ContentProvider的创建、生命周期及访问的线程分配，简化我们在应用间共享数据（进程间通信）的方式。我们只管通过ContentResolver访问ContentProvider所提示的数据接口，而不需要担心它所在进程是启动还是未启动 。
+	2. 更好的数据访问权限管理：
+	ContentProvider可以对开发的数据进行权限设置，不同的URI可以对应不同的权限，只有符合权限要求的组件才能访问到ContentProvider的具体操作
+31. ThreadLocal 原理
+32. 谈谈classloader
+33. handler发消息给子线程，looper怎么启动
+34. 内部类和静态内部类和匿名内部类
+25. 怎么启动service，service和activity怎么进行数据交互
+26. HashMap实现原理，ConcurrentHashMap 的实现原理
+27. HashMap HashTable的区别
+28. Android 打包过程经历了什么
+29. ArrayList是怎么扩容的知道吗
+30. synchronized和Lock的区别
+31. 序列化知道吗，说一下为什么要序列化
+32. stringbuilder  和stringbuffer区别
+33. 一个activity启动另外一个activity的生命周期
+34. Android的Service的生命周期有两种启动方法，有什么区别
+35. 请介绍下activty的加载过程
+36. Bitmap图片优化
+37. okhttp源码：分发器和五大拦截器
+38. Activity启动模式及应用场景?
+	1. standard: 普通的启动
+	2. singleTask: 栈内复用，主activity一般用这个
+	3. singleTop: 栈顶复用，消息、通知页面
+	4. singleInstance：呼叫来电、闹钟
+39. Dalvik和Art虚拟机区别
+40. AsyncTask和Handler+Thread机制的区别
+
+
 
 # 线程
-1. Handler机制
-	1. 一个线程是否只有一个Looper
-	2. 如何保证一个线程只有一个Looper
-2. 多线程的方式有哪些
+
+
 
 # 网络
 1. Http和Https的区别？
@@ -18,3 +92,11 @@
 	2. Https是使用端口443，而Http使用80
 	3. HttpsSSL+HTTP协议构建的可进行加密传输、身份认证的网络协议要比Http协议安全
 	4. Https协议需要到CA申请证书
+2. http状态码
+3. Tcp,ip分别属于哪一层
+4. tcp三次握手，包括状态的转换
+5. udp怎样能够实现可靠传输
+6. HTTP和HTTPS有什么区别，SSL是怎样实现安全传输（具体过程、对称非对称）
+7. TCP和UDP区别、哪个效率高，为什么
+8. UDP，丢包了应该怎么处理
+9. Socket 创建流程
