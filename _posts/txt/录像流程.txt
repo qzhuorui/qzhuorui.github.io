@@ -1,0 +1,42 @@
+camera录像设计到的类和框架MediaCodec、MediaMuxer、opengl es。
+
+预览：
+1）初始化opengl环境（离屏渲染），将预览界面的surface传递到egl层，通过方法（EGL14.eglCreateWindowSurface）和egl环境关联起来生成mDisplaySurface实例。
+2）生成texture（GLES20.glGenTextures(1, textures, 0)），并通过（GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textures[0])）方法将texture声明为外部texture
+3）给第二步中外部texture设置回调（texture.setOnFrameAvailableListener(callback)），再将其设置为camera的预览texture（camera.setPreviewTexture(texture)）。
+4）设置camera参数，并调用预览方法（camera.startpreview()）。
+5）texture的callback被触发（调用回调onFrameAvailable(SurfaceTexture surfaceTexture)），其中回调中处理texture交换的功能，将外部texture交换到预览界面上进行显示，如下：
+    mDisplaySurface.makeCurrent();//mDisplaySurface为上述第一步中关联得到的一个句柄，设置egl环境上下文
+    fboFrameRenderer.onDrawFrameWindow();
+    mDisplaySurface.swapBuffers();//数据发送到mDisplaySurface显示
+
+录像：
+其他部分和预览下相同。
+1、初始化mediaCodec mediaCodec = MediaCodec.createEncoderByType(MIME_TYPE);
+2、设置mediaCodec参数并设置相关编码回调接口（mediaCodec.setCallback(encodeCallback)），并将mediaCodec相关联的surface（mediaCodec.createInputSurface()）传给egl，egl做关联生成recorderSurface。
+   将mediaCodec的surface，如下方式交换：
+    recorderSurface.makeCurrent();//recorderSurface为mediaCodec相关联的句柄
+    fboFrameRenderer.onDrawFrame2Encoder();
+    recorderSurface.swapBuffers();//数据发送到recorderSurface进行编码
+3、mediaCodec开始编码后（mediaCodec.start()），camera预览数据会送到编码器进行编码，编码有输出数据会回调encodeCallback，将编码结果利用android的MediaMuxer类进行文件写入。
+
+
+拍照：
+利用camera拍照接口：takePicture(ShutterCallback shutter, PictureCallback raw,PictureCallback postview, PictureCallback jpeg)将生成的位图数据保存为jpg文件。
+
+
+camera参数设置：
+parameters.setPreviewSize(param.previewWidth, param.previewHeight);
+parameters.setPictureSize(param.picWidth, param.picHeight);
+parameters.setAntibanding(Camera.Parameters.ANTIBANDING_50HZ);
+parameters.set("low-power-mode", "enable");
+
+parameters.setPreviewFpsRange(fps * 1000,fps * 1000);
+parameters.setPreviewFrameRate(fps);
+//反射实现
+Method method = Camera.Parameters.class.getMethod("setDenoise", String.class);
+method.invoke(parameters, "denoise-on");
+method = Camera.Parameters.class.getMethod("setSharpness", int.class);
+method.invoke(parameters, 0);
+
+mCamera.setParameters(parameters);
